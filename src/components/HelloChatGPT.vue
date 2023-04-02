@@ -10,10 +10,10 @@ interface DataList {
   content?: string;
 }
 
-const errorMessage = () => {
+const errorMessage = (err: string) => {
   ElMessage({
     showClose: true,
-    message: '不能为空',
+    message: err,
     type: 'error',
   })
 }
@@ -23,7 +23,7 @@ const dataList: DataList[] = reactive([])
 
 defineProps<{ msg: string }>()
 const sendMessage = ()=> {
-  if (!textarea.value) return errorMessage()
+  if (!textarea.value) return errorMessage('不能为空')
   console.log(textarea.value);
   dataList.push({
     "role": 'user',
@@ -57,9 +57,12 @@ const getChatMessageFn = () => {
       const decoded = new TextDecoder().decode(value);
       // console.log(decoded);
       const jsonDecoded = JSON.parse(decoded);
-      console.log(jsonDecoded);
+      if (jsonDecoded.error) {
+        return errorMessage(jsonDecoded.error.message)
+      }
+      // console.log(jsonDecoded);
       dataList.push(jsonDecoded.choices[0].message)
-      console.log(dataList);
+      // console.log(dataList);
       return readStream(reader)
     }
     readStream(reader)
