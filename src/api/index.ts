@@ -2,6 +2,9 @@ import axios from 'axios'
 
 axios.defaults.timeout = 300000000 // 超时时间ms
 
+/**
+ * 请求配置
+ */
 axios.interceptors.request.use(
   function (config) {
     return config;
@@ -12,6 +15,9 @@ axios.interceptors.request.use(
   }
 );
 
+/**
+ * 响应配置
+ */
 axios.interceptors.response.use(function (response) {
   return response
 }, function (error) {

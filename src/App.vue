@@ -3,7 +3,7 @@ import HelloChatGPT from './components/HelloChatGPT.vue'
 </script>
 
 <template>
-  <HelloChatGPT msg="当前" />
+  <HelloChatGPT msg="my chatgpt" />
 </template>
 
 <style scoped>

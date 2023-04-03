@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import {
-  ref,
   watch,
-  defineEmits
+  ref
 } from 'vue'
 
-const openai_key = ref('')
+interface Props {
+  openaiKey: string
+}
+
+const props = defineProps<Props>()
+
+const openai_key = ref(props.openaiKey)
 
 const toEmit = defineEmits<{
     (event: 'toEmit', value: string): any

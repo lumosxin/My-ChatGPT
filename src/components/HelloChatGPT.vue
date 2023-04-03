@@ -3,43 +3,69 @@ import { onMounted, ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 
 import {
-  getChatMessage
+  getChatCompletions
 } from '@/api/openai'
 
-interface DataList {
-  role?: string;
-  content?: string;
-}
+/**
+ * props
+ */
+defineProps<{ msg: string }>()
 
-const errorMessage = (err: string) => {
+/**
+ * data
+ */
+// 消息内容
+const textarea = ref('');
+
+// 页面对话数组
+interface DataList {
+  role: string;
+  content: string;
+}
+const dataList: DataList[] = reactive([])
+
+// openai信息
+interface Openai {
+  key: string;
+  model: string;
+}
+const openai: Openai = reactive({
+  key: sessionStorage.getItem('openaiKey') || '',
+  model: sessionStorage.getItem('openaiModel') || 'gpt-3.5-turbo'
+});
+
+/**
+ * methods
+ */
+// 错误消息封装
+const errorMessage = (errType: any = 'info', err: string = '错误') => {
   ElMessage({
     showClose: true,
     message: err,
-    type: 'error',
+    type: errType,
   })
 }
 
-let openaiKey = ref('');
-const textarea = ref('');
-const dataList: DataList[] = reactive([])
-
-defineProps<{ msg: string }>()
+// 发送消息
 const sendMessage = ()=> {
-  if (!textarea.value) return errorMessage('消息不能为空')
-  if (!openaiKey.value) return errorMessage('key不能为空')
+  if (!textarea.value) return errorMessage('error', '消息不能为空')
+  if (!openai.model) return errorMessage('error', 'model不能为空')
   console.log(textarea.value);
+  console.log(openai.key);
   dataList.push({
     "role": 'user',
     "content": textarea.value
   })
   textarea.value = ''
+  sessionStorage.setItem('openaiKey', openai.key)
+  sessionStorage.setItem('openaiModel', openai.model)
   getChatMessageFn();
 }
 
 const getChatMessageFn = () => {
   console.log(dataList);
-  getChatMessage({
-    "model": "gpt-3.5-turbo",
+  getChatCompletions({
+    "model": openai.model,
     "messages": dataList,
     // "frequency_penalty": 0,
     // "max_tokens": 1000,
@@ -47,11 +73,12 @@ const getChatMessageFn = () => {
     // "stream": true,
     // "temperature": 1,
     // "top_p": 1,
-  }, openaiKey.value).then((response: any) => {
+  }, openai.key).then((response: any) => {
     console.log(response);
-    if(response !== 200) return errorMessage(response.statusText)
+    if(response !== 200) return errorMessage('error', response.statusText)
     const reader = response.body.getReader();
     console.log(reader);
+    // TODO 实时文本输出
     const readStream = async(reader: any): Promise<void>=> {
       const { done, value } = await reader.read()
       if (done) {
@@ -62,7 +89,7 @@ const getChatMessageFn = () => {
       console.log(decoded);
       const jsonDecoded = JSON.parse(decoded);
       if (jsonDecoded.error) {
-        return errorMessage(jsonDecoded.error.message)
+        return errorMessage('error', jsonDecoded.error.message)
       }
       console.log(jsonDecoded);
       dataList.push(jsonDecoded.choices[0].message)
@@ -70,12 +97,14 @@ const getChatMessageFn = () => {
       return readStream(reader)
     }
     readStream(reader)
+  }).catch(err => {
+    errorMessage('error', err.toString())
   })
 }
 
-const toEmit = (value: string) => {
-  openaiKey.value = value
-  console.log(openaiKey.value);
+const toEmit = (key: string) => {
+  openai.key = key
+  console.log(openai.key);
 }
 
 onMounted(() => {
@@ -91,6 +120,7 @@ onMounted(() => {
       <div class="box_right_header">
         <Header 
           @toEmit="toEmit"
+          :openaiKey="openai.key"
         />
       </div>
       <div class="box_right_content">
