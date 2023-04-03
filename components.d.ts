@@ -11,6 +11,9 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     ElButton: typeof import('element-plus/es')['ElButton']
     ElInput: typeof import('element-plus/es')['ElInput']
+    ElRow: typeof import('element-plus/es')['ElRow']
+    Header: typeof import('./src/components/Header.vue')['default']
     HelloChatGPT: typeof import('./src/components/HelloChatGPT.vue')['default']
+    Nav: typeof import('./src/components/Nav.vue')['default']
   }
 }

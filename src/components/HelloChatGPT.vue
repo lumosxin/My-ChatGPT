@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+
 import {
   getChatMessage
 } from '@/api/openai'
 
-import { ElMessage } from 'element-plus'
 interface DataList {
   role?: string;
   content?: string;
@@ -18,12 +19,14 @@ const errorMessage = (err: string) => {
   })
 }
 
+let openaiKey = ref('');
 const textarea = ref('');
 const dataList: DataList[] = reactive([])
 
 defineProps<{ msg: string }>()
 const sendMessage = ()=> {
-  if (!textarea.value) return errorMessage('不能为空')
+  if (!textarea.value) return errorMessage('消息不能为空')
+  if (!openaiKey.value) return errorMessage('key不能为空')
   console.log(textarea.value);
   dataList.push({
     "role": 'user',
@@ -44,29 +47,35 @@ const getChatMessageFn = () => {
     // "stream": true,
     // "temperature": 1,
     // "top_p": 1,
-  }).then((response: any) => {
+  }, openaiKey.value).then((response: any) => {
     console.log(response);
+    if(response !== 200) return errorMessage(response.statusText)
     const reader = response.body.getReader();
-    // console.log(reader);
+    console.log(reader);
     const readStream = async(reader: any): Promise<void>=> {
       const { done, value } = await reader.read()
       if (done) {
         return;
       }
-      // console.log(value);
+      console.log(value);
       const decoded = new TextDecoder().decode(value);
-      // console.log(decoded);
+      console.log(decoded);
       const jsonDecoded = JSON.parse(decoded);
       if (jsonDecoded.error) {
         return errorMessage(jsonDecoded.error.message)
       }
-      // console.log(jsonDecoded);
+      console.log(jsonDecoded);
       dataList.push(jsonDecoded.choices[0].message)
-      // console.log(dataList);
+      console.log(dataList);
       return readStream(reader)
     }
     readStream(reader)
   })
+}
+
+const toEmit = (value: string) => {
+  openaiKey.value = value
+  console.log(openaiKey.value);
 }
 
 onMounted(() => {
@@ -77,11 +86,12 @@ onMounted(() => {
 <template>
   <div class="box">
     <div class="box_left">
-
     </div>
     <div class="box_right">
       <div class="box_right_header">
-
+        <Header 
+          @toEmit="toEmit"
+        />
       </div>
       <div class="box_right_content">
         <template v-for="item in dataList">
@@ -119,13 +129,13 @@ onMounted(() => {
 <style scoped>
 .box {
   height: 700px;
-  width: 900px;
+  width: 1200px;
   display: flex;
   box-sizing: border-box;
 }
 .box .box_left {
   background: rgb(231, 248, 255);
-  width: 260px;
+  width: 280px;
   border-bottom: 1px solid rgb(133, 199, 214);
   border-top: 1px solid rgb(133, 199, 214);
   border-left: 1px solid rgb(133, 199, 214);

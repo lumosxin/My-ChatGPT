@@ -35,10 +35,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
-        target: '',
+      '/openai_api': {
+        target: 'https://api.openai.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/openai_api/, '')
       }
     }
   },
