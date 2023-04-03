@@ -1,6 +1,6 @@
 # My-ChatGPT
 
-## 配置
+## 环境、依赖版本
 
 ```
 node v19.6.1
@@ -17,7 +17,7 @@ yarn install
 - 根目录创建`.env.dev`文件
 ```bash
 # base url
-VITE_APP_API_URL = '/api'
+VITE_APP_API_URL = '/openai_api'
 ```
 
 ## 启动项目
